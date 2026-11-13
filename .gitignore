@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+*.tsbuildinfo
+
+# Env (keep example)
+.env
+.env.*
+!.env.example
+
+# Logs / cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vite/
+
+# IDE / OS
+.idea/
+.vs/
+*.suo
+*.user
+.DS_Store
+Thumbs.db
+
+# MSBuild / JS SDK
+obj/
+bin/
