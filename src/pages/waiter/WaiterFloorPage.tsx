@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/auth/AuthContext';
+import { FloorHeaderTools } from '@/layout/FloorHeaderTools';
 
 type FloorTableStatus = 'empty' | 'occupied' | 'ready';
 
@@ -64,8 +63,6 @@ function tableDetail(table: FloorTable): string {
 }
 
 export function WaiterFloorPage() {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
   const [selectedId, setSelectedId] = useState(PREVIEW_TABLES[6]?.id ?? PREVIEW_TABLES[0].id);
   const [actionsOpen, setActionsOpen] = useState(true);
   const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
@@ -79,31 +76,8 @@ export function WaiterFloorPage() {
     <>
       <header className="floor-header">
         <div className="floor-brand-block">
-          <p className="floor-logo">RESTORA</p>
+          <p className="floor-logo">SERVORA</p>
           <p className="floor-kicker">Garson Yönetim Paneli</p>
-        </div>
-
-        <div className="floor-header-side">
-          <span className="floor-online">
-            <span className="floor-online-dot" aria-hidden="true" />
-            Çevrimiçi
-          </span>
-          <div className="floor-tools">
-            <button className="floor-icon-btn" type="button" aria-label="Bildirimler">
-              <BellIcon />
-            </button>
-            <button
-              className="floor-text-btn"
-              type="button"
-              onClick={() => {
-                void logout()
-                  .catch(() => undefined)
-                  .finally(() => navigate('/'));
-              }}
-            >
-              Çıkış
-            </button>
-          </div>
         </div>
 
         <div className="floor-greet">
@@ -111,6 +85,18 @@ export function WaiterFloorPage() {
             {greeting} <span aria-hidden="true">👋</span>
           </h1>
           <p>Bugün güzel bir servis günü!</p>
+        </div>
+
+        <div className="floor-header-side">
+          <span className="floor-online">
+            <span className="floor-online-dot" aria-hidden="true" />
+            Çevrimiçi
+          </span>
+          <FloorHeaderTools>
+            <button className="floor-icon-btn" type="button" aria-label="Bildirimler">
+              <BellIcon />
+            </button>
+          </FloorHeaderTools>
         </div>
       </header>
 

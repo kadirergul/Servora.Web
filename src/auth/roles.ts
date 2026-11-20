@@ -36,7 +36,7 @@ const APP_PATHS: readonly { prefix: string; roles: readonly Role[] }[] = [
   { prefix: '/mutfak', roles: KITCHEN_FLOOR_ROLES },
   { prefix: '/kasa', roles: CASHIER_FLOOR_ROLES },
   { prefix: '/tanimlamalar/kullanicilar', roles: USER_MANAGER_ROLES },
-  { prefix: '/masa-takip', roles: USER_MANAGER_ROLES },
+  { prefix: '/yonetim', roles: USER_MANAGER_ROLES },
   { prefix: '/raporlar', roles: USER_MANAGER_ROLES },
   { prefix: '/tanimlamalar', roles: USER_MANAGER_ROLES },
 ];
@@ -54,7 +54,7 @@ export function homePathForRole(role: Role | null | undefined): string {
     case 'Cashier':
       return '/kasa';
     default:
-      return '/masa-takip';
+      return '/yonetim';
   }
 }
 

@@ -19,6 +19,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/masa-takip" element={<Navigate to="/yonetim" replace />} />
 
       <Route element={<FloorLayout />}>
         <Route
@@ -55,11 +56,11 @@ export function AppRoutes() {
 
       <Route element={<AuthenticatedLayout />}>
         <Route
-          path="/masa-takip"
+          path="/yonetim"
           element={
             <PlaceholderPage
-              title="Masa Takip"
-              description="Aktif masaları buradan takip edeceksin."
+              title="Yönetici"
+              description="Raporlar ve tanımlamalar bu alandan açılır."
             />
           }
         />
