@@ -1,17 +1,29 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
+import { pathAfterLogin } from '@/auth/roles';
 import { AppShell } from '@/layout/AppShell';
 
+function requestedPath(state: unknown): string | null {
+  if (!state || typeof state !== 'object' || !('from' in state)) {
+    return null;
+  }
+
+  const from = state.from;
+  return typeof from === 'string' ? from : null;
+}
+
 export function LoginPage() {
-  const { isAuthenticated, login } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated, role, login } = useAuth();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const destination = pathAfterLogin(role, requestedPath(location.state));
 
   if (isAuthenticated) {
-    return <Navigate to="/masa-takip" replace />;
+    return <Navigate to={destination} replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

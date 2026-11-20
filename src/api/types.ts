@@ -47,6 +47,19 @@ export type UpdateUserRequest = {
   password?: string | null;
 };
 
+export type TenantResponse = {
+  id: string;
+  name: string;
+  isActive: boolean;
+};
+
+export type BranchResponse = {
+  id: string;
+  name: string;
+  usesKitchen: boolean;
+  isActive: boolean;
+};
+
 export type ApiError = {
   title?: string;
   detail?: string;

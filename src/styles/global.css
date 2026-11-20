@@ -186,6 +186,51 @@ select {
   align-items: center;
 }
 
+.shell-menu {
+  position: relative;
+}
+
+.topbar .shell-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 2px;
+  min-width: 180px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.shell-menu-link {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.shell-menu-link:hover {
+  background: var(--color-surface-muted);
+  text-decoration: none;
+}
+
+.shell-menu-link.is-current {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.shell-menu-link:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
 .app-body {
   min-height: 0;
   display: grid;

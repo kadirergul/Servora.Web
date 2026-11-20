@@ -27,4 +27,4 @@ Uygulama: `http://localhost:5173`
 
 ## Yapılandırma
 
-`VITE_API_BASE_URL` — backend taban URL’i. Yerel geliştirmede `http://localhost:5137`.
+`VITE_API_BASE_URL` — API taban adresi. Yerel geliştirmede `/api` bırak; Vite bunu `http://localhost:5137` adresine iletir.

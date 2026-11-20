@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
+import { homePathForRole } from '@/auth/roles';
+import { ScreenMenu } from '@/layout/ScreenMenu';
 import { Sidebar } from '@/layout/Sidebar';
 import { useTheme } from '@/theme';
 
@@ -51,16 +53,17 @@ export function AppShell({
   showSidebar = false,
 }: AppShellProps) {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, role, logout } = useAuth();
   const { themeName, setThemeName } = useTheme();
 
   return (
     <div className="app-shell">
       <header className="topbar">
-        <Link to={isAuthenticated ? '/masa-takip' : '/'} className="topbar-brand">
+        <Link to={isAuthenticated ? homePathForRole(role) : '/'} className="topbar-brand">
           Servora
         </Link>
         <nav>
+          {isAuthenticated ? <ScreenMenu /> : null}
           {isAuthenticated ? (
             <button
               className="btn"

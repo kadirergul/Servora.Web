@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import type { Role } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
+import { homePathForRole } from '@/auth/roles';
 
 type RequireRoleProps = {
   roles: readonly Role[];
@@ -9,19 +10,16 @@ type RequireRoleProps = {
   fallbackTo?: string;
 };
 
-export function RequireRole({
-  roles,
-  children,
-  fallbackTo = '/masa-takip',
-}: RequireRoleProps) {
+export function RequireRole({ roles, children, fallbackTo }: RequireRoleProps) {
+  const location = useLocation();
   const { isAuthenticated, role } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" replace state={{ from: location.pathname }} />;
   }
 
   if (!role || !roles.includes(role)) {
-    return <Navigate to={fallbackTo} replace />;
+    return <Navigate to={fallbackTo ?? homePathForRole(role)} replace />;
   }
 
   return children;

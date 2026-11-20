@@ -10,9 +10,9 @@ import type { NavItem } from './types';
  */
 export const navItems: NavItem[] = [
   {
-    id: 'masa-takip',
-    label: 'Masa Takip',
-    path: '/masa-takip',
+    id: 'yonetim',
+    label: 'Yönetici',
+    path: '/yonetim',
   },
   {
     id: 'raporlar',
