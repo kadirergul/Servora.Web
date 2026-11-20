@@ -1,6 +1,7 @@
 import type { ApiError } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+const configuredApiBase = import.meta.env.VITE_API_BASE_URL?.trim();
+const API_BASE_URL = configuredApiBase || (import.meta.env.DEV ? '/api' : '');
 const API_TIMEOUT_MS = 4_000;
 
 export type RequestOptions = {

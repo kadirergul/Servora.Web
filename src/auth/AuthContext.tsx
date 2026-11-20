@@ -10,7 +10,6 @@ import {
 import * as authApi from '@/api/authApi';
 import type { AuthResponse, LoginRequest, Role } from '@/api/types';
 import { parseAccessTokenClaims } from './jwt';
-import { PREVIEW_REFRESH_TOKEN } from './previewSession';
 import { clearAuth, loadAuth, saveAuth, type StoredAuth } from './tokenStorage';
 
 const REFRESH_SKEW_MS = 60_000;
@@ -99,7 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = useCallback(async () => {
     const refreshToken = authRef.current?.refreshToken;
     try {
-      if (refreshToken && refreshToken !== PREVIEW_REFRESH_TOKEN) {
+      if (refreshToken) {
         await authApi.logout(refreshToken);
       }
     } finally {

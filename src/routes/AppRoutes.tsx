@@ -1,8 +1,14 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { RequireRole } from '@/auth/RequireRole';
-import { USER_MANAGER_ROLES } from '@/auth/roles';
+import {
+  CASHIER_FLOOR_ROLES,
+  KITCHEN_FLOOR_ROLES,
+  USER_MANAGER_ROLES,
+  WAITER_FLOOR_ROLES,
+} from '@/auth/roles';
 import { AuthenticatedLayout } from '@/layout/AuthenticatedLayout';
 import { FloorLayout } from '@/layout/FloorLayout';
+import { FloorSoonPage } from '@/pages/FloorSoonPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { UsersPage } from '@/pages/UsersPage';
@@ -15,7 +21,36 @@ export function AppRoutes() {
       <Route path="/login" element={<Navigate to="/" replace />} />
 
       <Route element={<FloorLayout />}>
-        <Route path="/garson" element={<WaiterFloorPage />} />
+        <Route
+          path="/garson"
+          element={
+            <RequireRole roles={WAITER_FLOOR_ROLES}>
+              <WaiterFloorPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/mutfak"
+          element={
+            <RequireRole roles={KITCHEN_FLOOR_ROLES}>
+              <FloorSoonPage
+                title="Mutfak"
+                description="Mutfak kuyruğu bu adreste açılacak."
+              />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/kasa"
+          element={
+            <RequireRole roles={CASHIER_FLOOR_ROLES}>
+              <FloorSoonPage
+                title="Kasa"
+                description="Tahsilat bu adreste açılacak."
+              />
+            </RequireRole>
+          }
+        />
       </Route>
 
       <Route element={<AuthenticatedLayout />}>

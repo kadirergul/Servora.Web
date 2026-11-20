@@ -1,22 +1,29 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
-import type { Role } from '@/api/types';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
-import { createPreviewAuth } from '@/auth/previewSession';
-import { homePathForRole, ROLE_LABELS } from '@/auth/roles';
+import { pathAfterLogin } from '@/auth/roles';
 import { AppShell } from '@/layout/AppShell';
 
-const PREVIEW_ROLES: readonly Role[] = ['Waiter', 'Kitchen', 'Cashier', 'Manager'];
+function requestedPath(state: unknown): string | null {
+  if (!state || typeof state !== 'object' || !('from' in state)) {
+    return null;
+  }
+
+  const from = state.from;
+  return typeof from === 'string' ? from : null;
+}
 
 export function LoginPage() {
-  const { isAuthenticated, role, login, setAuth } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated, role, login } = useAuth();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const destination = pathAfterLogin(role, requestedPath(location.state));
 
   if (isAuthenticated) {
-    return <Navigate to={homePathForRole(role)} replace />;
+    return <Navigate to={destination} replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -76,24 +83,6 @@ export function LoginPage() {
             </button>
           </div>
         </form>
-
-        {import.meta.env.DEV ? (
-          <div className="preview-entry">
-            <p className="muted">API kapalıyken arayüzü aç</p>
-            <div className="actions">
-              {PREVIEW_ROLES.map((previewRole) => (
-                <button
-                  key={previewRole}
-                  className="btn"
-                  type="button"
-                  onClick={() => setAuth(createPreviewAuth(previewRole))}
-                >
-                  {ROLE_LABELS[previewRole]}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </div>
     </AppShell>
   );
