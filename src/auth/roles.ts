@@ -7,8 +7,24 @@ export const USER_MANAGER_ROLES: readonly Role[] = [
   'Manager',
 ];
 
+/** Roles that can open the waiter floor. */
+export const WAITER_FLOOR_ROLES: readonly Role[] = [
+  'PlatformAdmin',
+  'Owner',
+  'Manager',
+  'Waiter',
+];
+
 export function canManageUsers(role: Role | null | undefined): boolean {
   return Boolean(role && USER_MANAGER_ROLES.includes(role));
+}
+
+export function homePathForRole(role: Role | null | undefined): string {
+  if (role === 'Waiter') {
+    return '/garson';
+  }
+
+  return '/masa-takip';
 }
 
 export function getAssignableRoles(actorRole: Role | null | undefined): Role[] {

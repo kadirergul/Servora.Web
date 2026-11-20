@@ -1,17 +1,22 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
+import type { Role } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
+import { createPreviewAuth } from '@/auth/previewSession';
+import { homePathForRole, ROLE_LABELS } from '@/auth/roles';
 import { AppShell } from '@/layout/AppShell';
 
+const PREVIEW_ROLES: readonly Role[] = ['Waiter', 'Kitchen', 'Cashier', 'Manager'];
+
 export function LoginPage() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, role, login, setAuth } = useAuth();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   if (isAuthenticated) {
-    return <Navigate to="/masa-takip" replace />;
+    return <Navigate to={homePathForRole(role)} replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -71,6 +76,24 @@ export function LoginPage() {
             </button>
           </div>
         </form>
+
+        {import.meta.env.DEV ? (
+          <div className="preview-entry">
+            <p className="muted">API kapalıyken arayüzü aç</p>
+            <div className="actions">
+              {PREVIEW_ROLES.map((previewRole) => (
+                <button
+                  key={previewRole}
+                  className="btn"
+                  type="button"
+                  onClick={() => setAuth(createPreviewAuth(previewRole))}
+                >
+                  {ROLE_LABELS[previewRole]}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
     </AppShell>
   );

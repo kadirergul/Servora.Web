@@ -1,6 +1,7 @@
 import type { ApiError } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+const API_TIMEOUT_MS = 4_000;
 
 export type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -40,7 +41,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       method: options.method ?? 'GET',
       headers,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
-      signal: options.signal,
+      signal: options.signal ?? AbortSignal.timeout(API_TIMEOUT_MS),
     });
   } catch {
     throw new ApiRequestError('API’ye bağlanılamadı. Servisin çalıştığından emin ol.', 0);

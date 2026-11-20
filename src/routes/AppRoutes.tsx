@@ -2,15 +2,21 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { RequireRole } from '@/auth/RequireRole';
 import { USER_MANAGER_ROLES } from '@/auth/roles';
 import { AuthenticatedLayout } from '@/layout/AuthenticatedLayout';
+import { FloorLayout } from '@/layout/FloorLayout';
 import { LoginPage } from '@/pages/LoginPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { UsersPage } from '@/pages/UsersPage';
+import { WaiterFloorPage } from '@/pages/waiter/WaiterFloorPage';
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
+
+      <Route element={<FloorLayout />}>
+        <Route path="/garson" element={<WaiterFloorPage />} />
+      </Route>
 
       <Route element={<AuthenticatedLayout />}>
         <Route
