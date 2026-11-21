@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as branchesApi from '@/api/branchesApi';
 import * as kitchenApi from '@/api/kitchenApi';
+import * as orderLinesApi from '@/api/orderLinesApi';
 import * as tenantsApi from '@/api/tenantsApi';
 import type {
   BranchResponse,
@@ -98,6 +99,7 @@ export function KitchenFloorPage() {
   );
 
   const [items, setItems] = useState<KitchenQueueItemResponse[]>([]);
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [updatingTableId, setUpdatingTableId] = useState<string | null>(null);
@@ -189,24 +191,37 @@ export function KitchenFloorPage() {
     };
   }, [needsBranchPicker, role, tenantId, selectedTenantId, getAccessToken]);
 
-  const loadQueue = useCallback(async () => {
+  const loadQueue = useCallback(async (opts?: { silent?: boolean }) => {
     if (!activeBranchId) {
       setItems([]);
+      setNotes({});
       return;
     }
 
-    setLoading(true);
+    if (!opts?.silent) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
       const token = await getAccessToken();
       const queue = await kitchenApi.listKitchenQueue(token, activeBranchId);
       setItems(queue);
+      setNotes((prev) => {
+        const next: Record<string, string> = {};
+        for (const item of queue) {
+          next[item.orderLineId] =
+            prev[item.orderLineId] !== undefined ? prev[item.orderLineId] : (item.note ?? '');
+        }
+        return next;
+      });
     } catch (err) {
       setItems([]);
       setError(err instanceof Error ? err.message : 'Mutfak kuyruğu yüklenemedi');
     } finally {
-      setLoading(false);
+      if (!opts?.silent) {
+        setLoading(false);
+      }
     }
   }, [activeBranchId, getAccessToken]);
 
@@ -220,7 +235,7 @@ export function KitchenFloorPage() {
     }
 
     const timer = window.setInterval(() => {
-      void loadQueue();
+      void loadQueue({ silent: true });
     }, 8_000);
 
     return () => {
@@ -244,7 +259,7 @@ export function KitchenFloorPage() {
         item.orderLineId,
         'Ready',
       );
-      await loadQueue();
+      await loadQueue({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Durum güncellenemedi');
     } finally {
@@ -275,12 +290,37 @@ export function KitchenFloorPage() {
           'Ready',
         );
       }
-      await loadQueue();
+      await loadQueue({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Durum güncellenemedi');
-      await loadQueue();
+      await loadQueue({ silent: true });
     } finally {
       setUpdatingTableId(null);
+    }
+  }
+
+  async function handleRequestCancel(item: KitchenQueueItemResponse) {
+    if (!activeBranchId || updatingId || updatingTableId || item.cancelRequested) {
+      return;
+    }
+
+    setUpdatingId(item.orderLineId);
+    setError(null);
+
+    try {
+      const token = await getAccessToken();
+      const draft = notes[item.orderLineId] ?? '';
+      await orderLinesApi.requestOrderLineCancel(
+        token,
+        activeBranchId,
+        item.orderLineId,
+        draft.trim() || null,
+      );
+      await loadQueue({ silent: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'İptal isteği gönderilemedi');
+    } finally {
+      setUpdatingId(null);
     }
   }
 
@@ -438,34 +478,69 @@ export function KitchenFloorPage() {
                           </div>
 
                           <ul className="floor-kitchen-lines">
-                            {group.items.map((item) => (
-                              <li key={item.orderLineId} className="floor-kitchen-line">
-                                <div className="floor-kitchen-main">
-                                  <div className="floor-kitchen-meta">
-                                    <span className="floor-detail-status is-preparing">
-                                      Hazırlanıyor
-                                    </span>
-                                    <span className="floor-kitchen-time">
-                                      {formatTime(item.orderedAt)}
-                                    </span>
-                                  </div>
-                                  <p className="floor-kitchen-name">
-                                    {item.quantity}× {item.name}
-                                  </p>
-                                  {item.note ? (
-                                    <p className="floor-kitchen-note">{item.note}</p>
-                                  ) : null}
-                                </div>
-                                <button
-                                  className="floor-kitchen-action is-ghost"
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() => void handleMarkReady(item)}
+                            {group.items.map((item) => {
+                              const draft = notes[item.orderLineId] ?? '';
+                              const lineBusy = busy || updatingId === item.orderLineId;
+
+                              return (
+                                <li
+                                  key={item.orderLineId}
+                                  className={`floor-kitchen-line${item.cancelRequested ? ' is-cancel-requested' : ''}`}
                                 >
-                                  {updatingId === item.orderLineId ? '...' : 'Hazır'}
-                                </button>
-                              </li>
-                            ))}
+                                  <div className="floor-kitchen-main">
+                                    <div className="floor-kitchen-meta">
+                                      <span className="floor-detail-status is-preparing">
+                                        Hazırlanıyor
+                                      </span>
+                                      {item.cancelRequested ? (
+                                        <span className="floor-detail-status is-cancel-requested">
+                                          Garsona bildirildi
+                                        </span>
+                                      ) : null}
+                                      <span className="floor-kitchen-time">
+                                        {formatTime(item.orderedAt)}
+                                      </span>
+                                    </div>
+                                    <p className="floor-kitchen-name">
+                                      {item.quantity}× {item.name}
+                                    </p>
+                                    <label className="floor-kitchen-note-field">
+                                      <span>Not (isteğe bağlı)</span>
+                                      <input
+                                        type="text"
+                                        value={draft}
+                                        placeholder="İptal nedeni / not"
+                                        disabled={lineBusy || item.cancelRequested}
+                                        onChange={(event) =>
+                                          setNotes((prev) => ({
+                                            ...prev,
+                                            [item.orderLineId]: event.target.value,
+                                          }))
+                                        }
+                                      />
+                                    </label>
+                                  </div>
+                                  <div className="floor-kitchen-line-actions">
+                                    <button
+                                      className="floor-kitchen-action is-ghost"
+                                      type="button"
+                                      disabled={lineBusy || item.cancelRequested}
+                                      onClick={() => void handleMarkReady(item)}
+                                    >
+                                      {updatingId === item.orderLineId ? '...' : 'Hazır'}
+                                    </button>
+                                    <button
+                                      className="floor-kitchen-action is-danger"
+                                      type="button"
+                                      disabled={lineBusy || item.cancelRequested}
+                                      onClick={() => void handleRequestCancel(item)}
+                                    >
+                                      {item.cancelRequested ? 'Bildirildi' : 'Garsona iptal bildir'}
+                                    </button>
+                                  </div>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </li>
                       );

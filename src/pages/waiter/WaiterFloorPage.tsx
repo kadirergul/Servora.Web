@@ -16,6 +16,7 @@ type FloorTable = {
   name: string;
   status: FloorTableStatus;
   sessionId: string | null;
+  hasCancelRequest: boolean;
 };
 
 const STATUS_LABEL: Record<FloorTableStatus, string> = {
@@ -50,6 +51,10 @@ function tableDetail(table: FloorTable): string {
     return 'Müşteri bekliyor';
   }
 
+  if (table.hasCancelRequest) {
+    return 'Mutfak iptal istedi · Detaylar';
+  }
+
   if (table.status === 'ready') {
     return 'Sipariş hazır';
   }
@@ -78,6 +83,7 @@ function toFloorTables(tables: TableResponse[]): FloorTable[] {
       name: table.name,
       status,
       sessionId: table.sessionId,
+      hasCancelRequest: table.hasCancelRequest,
     };
   });
 }
@@ -104,6 +110,7 @@ export function WaiterFloorPage() {
   const [tables, setTables] = useState<FloorTable[]>([]);
   const [loading, setLoading] = useState(false);
   const [openingSession, setOpeningSession] = useState(false);
+  const [closingSession, setClosingSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [actionsOpen, setActionsOpen] = useState(true);
@@ -258,6 +265,31 @@ export function WaiterFloorPage() {
       window.clearInterval(timer);
     };
   }, [activeBranchId, loadTables]);
+
+  async function handleCloseTable() {
+    if (!selected?.sessionId || !activeBranchId || closingSession) {
+      return;
+    }
+
+    // Only empty sessions (no order lines) can be voided.
+    if (selected.status !== 'occupied') {
+      setError('Siparişi olan masa kapatılamaz. Önce ürünleri iptal et.');
+      return;
+    }
+
+    setClosingSession(true);
+    setError(null);
+
+    try {
+      const token = await getAccessToken();
+      await sessionsApi.cancelTableSession(token, activeBranchId, selected.sessionId);
+      await loadTables();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Masa kapatılamadı');
+    } finally {
+      setClosingSession(false);
+    }
+  }
 
   async function handleTakeOrder() {
     if (!selected || !activeBranchId || openingSession) {
@@ -552,6 +584,19 @@ export function WaiterFloorPage() {
                   }}
                 >
                   Detaylar
+                </button>
+                <button
+                  className="floor-ghost-btn"
+                  type="button"
+                  disabled={
+                    !selected?.sessionId ||
+                    selected.status !== 'occupied' ||
+                    closingSession ||
+                    openingSession
+                  }
+                  onClick={() => void handleCloseTable()}
+                >
+                  {closingSession ? 'Kapatılıyor...' : 'Masayı kapat'}
                 </button>
               </div>
             </div>

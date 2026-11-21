@@ -117,11 +117,18 @@ export function WaiterSessionDetailScreen({
                     {line.quantity}× {line.name}
                   </strong>
                   {line.note ? <span className="floor-detail-note">{line.note}</span> : null}
-                  <span
-                    className={`floor-detail-status is-${line.kitchenStatus.toLowerCase()}`}
-                  >
-                    {KITCHEN_STATUS_LABEL[line.kitchenStatus]}
-                  </span>
+                  <div className="floor-detail-status-row">
+                    <span
+                      className={`floor-detail-status is-${line.kitchenStatus.toLowerCase()}`}
+                    >
+                      {KITCHEN_STATUS_LABEL[line.kitchenStatus]}
+                    </span>
+                    {line.cancelRequested ? (
+                      <span className="floor-detail-status is-cancel-requested">
+                        Mutfak iptal istedi
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="floor-detail-side">
                   <em>{formatLira(line.lineTotal)}</em>

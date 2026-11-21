@@ -28,3 +28,14 @@ export async function getTableSession(
     },
   );
 }
+
+export async function cancelTableSession(
+  token: string,
+  branchId: string,
+  sessionId: string,
+): Promise<void> {
+  await apiRequest<void>(`/branches/${branchId}/sessions/${sessionId}/cancel`, {
+    method: 'POST',
+    token,
+  });
+}

@@ -67,6 +67,7 @@ export type TableResponse = {
   hasPendingOrder: boolean;
   hasPreparingOrder: boolean;
   hasReadyOrder: boolean;
+  hasCancelRequest: boolean;
   sessionId: string | null;
   openedAt: string | null;
 };
@@ -118,6 +119,7 @@ export type TableSessionLineResponse = {
   quantity: number;
   lineTotal: number;
   kitchenStatus: KitchenStatus;
+  cancelRequested: boolean;
 };
 
 export type TableSessionDetailResponse = {
@@ -153,6 +155,7 @@ export type KitchenQueueItemResponse = {
   note: string;
   quantity: number;
   kitchenStatus: KitchenStatus;
+  cancelRequested: boolean;
   orderedAt: string;
 };
 

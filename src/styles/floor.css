@@ -904,6 +904,21 @@
   color: #fecaca;
 }
 
+.floor-detail-status.is-cancel-requested {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fecaca;
+}
+
+.floor-detail-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.floor-kitchen-line.is-cancel-requested {
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
 .floor-detail-status.is-served {
   background: rgba(167, 176, 170, 0.16);
   color: #c3cbc5;
@@ -992,7 +1007,7 @@
 
 .floor-kitchen-line {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   min-width: 0;
@@ -1000,6 +1015,49 @@
   border: 1px solid #2c322f;
   border-radius: 14px;
   background: #121512;
+}
+
+.floor-kitchen-line-actions {
+  display: grid;
+  gap: 8px;
+  flex: 0 0 auto;
+  justify-items: stretch;
+}
+
+.floor-kitchen-note-field {
+  display: grid;
+  gap: 6px;
+}
+
+.floor-kitchen-note-field span {
+  color: #9aa39c;
+  font-size: 0.72rem;
+}
+
+.floor-kitchen-note-field input {
+  min-height: 36px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid #2c322f;
+  border-radius: 12px;
+  background: #070807;
+  color: #f3f6f4;
+  font-size: 0.88rem;
+}
+
+.floor-kitchen-note-field input:disabled {
+  opacity: 0.45;
+}
+
+.floor-kitchen-note-field input:focus-visible {
+  outline: 2px solid #8ee0b8;
+  outline-offset: 2px;
+}
+
+.floor-kitchen-action.is-danger {
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
 }
 
 .floor-kitchen-main {
