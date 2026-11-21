@@ -128,6 +128,20 @@ export type TableSessionDetailResponse = {
   lines: TableSessionLineResponse[];
 };
 
+export type PaymentMethod = 'Cash' | 'Card';
+
+export type TakePaymentRequest = {
+  method: PaymentMethod;
+  amount?: number | null;
+};
+
+export type TakePaymentResponse = {
+  id: string;
+  amount: number;
+  remaining: number;
+  sessionClosed: boolean;
+};
+
 export type KitchenQueueItemResponse = {
   orderLineId: string;
   tableId: string;

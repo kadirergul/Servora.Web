@@ -855,6 +855,76 @@
   font-variant-numeric: tabular-nums;
 }
 
+.floor-bill {
+  display: grid;
+  gap: 16px;
+}
+
+.floor-bill-success {
+  margin: 0 0 12px;
+  color: #b6f5c9;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.floor-bill-methods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.floor-bill-method {
+  min-height: 44px;
+  border: 1px solid #2c322f;
+  border-radius: 999px;
+  background: #070807;
+  color: #d7ddd8;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.floor-bill-method.is-active {
+  border-color: #3ddc6e;
+  background: rgba(61, 220, 110, 0.16);
+  color: #b6f5c9;
+}
+
+.floor-bill-method:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.floor-bill-amount {
+  display: grid;
+  gap: 6px;
+}
+
+.floor-bill-amount span {
+  color: #9aa39c;
+  font-size: 0.78rem;
+}
+
+.floor-bill-amount input {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #2c322f;
+  border-radius: 14px;
+  background: #070807;
+  color: #f3f6f4;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.floor-bill-amount input:disabled {
+  opacity: 0.45;
+}
+
+.floor-bill-amount input:focus-visible {
+  outline: 2px solid #8ee0b8;
+  outline-offset: 2px;
+}
+
 .floor-detail-totals {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
