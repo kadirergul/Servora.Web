@@ -60,6 +60,28 @@ export type BranchResponse = {
   isActive: boolean;
 };
 
+export type TableResponse = {
+  id: string;
+  name: string;
+  isOccupied: boolean;
+  sessionId: string | null;
+  openedAt: string | null;
+};
+
+export type KitchenStatus = 'Pending' | 'Preparing' | 'Ready' | 'Served';
+
+export type KitchenQueueItemResponse = {
+  orderLineId: string;
+  tableId: string;
+  tableName: string;
+  sessionId: string;
+  name: string;
+  note: string;
+  quantity: number;
+  kitchenStatus: KitchenStatus;
+  orderedAt: string;
+};
+
 export type ApiError = {
   title?: string;
   detail?: string;
