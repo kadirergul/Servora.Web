@@ -104,6 +104,30 @@ export type AddOrderRoundResponse = {
 
 export type KitchenStatus = 'Pending' | 'Preparing' | 'Ready' | 'Served';
 
+export type TableSessionStatus = 'Open' | 'Closed' | 'Cancelled';
+
+export type TableSessionLineResponse = {
+  id: string;
+  orderRoundId: string;
+  menuItemId: string;
+  name: string;
+  note: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+  kitchenStatus: KitchenStatus;
+};
+
+export type TableSessionDetailResponse = {
+  id: string;
+  tableId: string;
+  status: TableSessionStatus;
+  total: number;
+  paid: number;
+  remaining: number;
+  lines: TableSessionLineResponse[];
+};
+
 export type KitchenQueueItemResponse = {
   orderLineId: string;
   tableId: string;

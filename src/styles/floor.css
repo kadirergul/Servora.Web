@@ -782,6 +782,105 @@
   outline-offset: 2px;
 }
 
+.floor-detail-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.floor-detail-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #2c322f;
+  border-radius: 16px;
+  background: #070807;
+}
+
+.floor-detail-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.floor-detail-main strong {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.floor-detail-note {
+  color: #9aa39c;
+  font-size: 0.8rem;
+}
+
+.floor-detail-status {
+  justify-self: start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.floor-detail-status.is-pending {
+  background: rgba(255, 196, 86, 0.16);
+  color: #ffd27a;
+}
+
+.floor-detail-status.is-preparing {
+  background: rgba(110, 168, 255, 0.16);
+  color: #9ec2ff;
+}
+
+.floor-detail-status.is-ready {
+  background: rgba(61, 220, 110, 0.16);
+  color: #b6f5c9;
+}
+
+.floor-detail-status.is-served {
+  background: rgba(167, 176, 170, 0.16);
+  color: #c3cbc5;
+}
+
+.floor-detail-item em {
+  flex: 0 0 auto;
+  color: #3ddc6e;
+  font-style: normal;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.floor-detail-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.floor-detail-totals div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #2c322f;
+  border-radius: 14px;
+  background: #070807;
+}
+
+.floor-detail-totals span {
+  color: #9aa39c;
+  font-size: 0.75rem;
+}
+
+.floor-detail-totals strong {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (min-width: 720px) {
   .floor-order-bar,
   .floor-order-cats,
@@ -794,10 +893,18 @@
   .floor-order-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .floor-detail-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1100px) {
   .floor-order-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .floor-detail-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

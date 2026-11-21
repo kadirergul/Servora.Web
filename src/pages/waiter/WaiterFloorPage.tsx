@@ -7,6 +7,7 @@ import type { BranchResponse, TableResponse, TenantResponse } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext';
 import { FloorHeaderTools } from '@/layout/FloorHeaderTools';
 import { WaiterOrderScreen } from '@/pages/waiter/WaiterOrderScreen';
+import { WaiterSessionDetailScreen } from '@/pages/waiter/WaiterSessionDetailScreen';
 
 type FloorTableStatus = 'empty' | 'occupied' | 'ready';
 
@@ -99,6 +100,11 @@ export function WaiterFloorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [actionsOpen, setActionsOpen] = useState(true);
   const [orderSession, setOrderSession] = useState<{
+    tableId: string;
+    tableName: string;
+    sessionId: string;
+  } | null>(null);
+  const [detailSession, setDetailSession] = useState<{
     tableId: string;
     tableName: string;
     sessionId: string;
@@ -279,6 +285,31 @@ export function WaiterFloorPage() {
           sessionId={orderSession.sessionId}
           onClose={() => {
             setOrderSession(null);
+            void loadTables();
+          }}
+        />
+      </>
+    );
+  }
+
+  if (detailSession && activeBranchId) {
+    return (
+      <>
+        <header className="floor-header">
+          <div className="floor-brand-block">
+            <p className="floor-logo">SERVORA</p>
+            <p className="floor-kicker">Garson Yönetim Paneli</p>
+          </div>
+          <div className="floor-header-side">
+            <FloorHeaderTools />
+          </div>
+        </header>
+        <WaiterSessionDetailScreen
+          branchId={activeBranchId}
+          tableName={detailSession.tableName}
+          sessionId={detailSession.sessionId}
+          onClose={() => {
+            setDetailSession(null);
             void loadTables();
           }}
         />
@@ -478,7 +509,21 @@ export function WaiterFloorPage() {
                 <button className="floor-ghost-btn" type="button" disabled={!selected}>
                   Hesap
                 </button>
-                <button className="floor-ghost-btn" type="button" disabled={!selected}>
+                <button
+                  className="floor-ghost-btn"
+                  type="button"
+                  disabled={!selected?.sessionId}
+                  onClick={() => {
+                    if (!selected?.sessionId) {
+                      return;
+                    }
+                    setDetailSession({
+                      tableId: selected.id,
+                      tableName: selected.name,
+                      sessionId: selected.sessionId,
+                    });
+                  }}
+                >
                   Detaylar
                 </button>
               </div>

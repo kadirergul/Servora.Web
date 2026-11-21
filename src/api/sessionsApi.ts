@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { OpenTableSessionResponse } from './types';
+import type { OpenTableSessionResponse, TableSessionDetailResponse } from './types';
 
 export async function openTableSession(
   token: string,
@@ -10,6 +10,20 @@ export async function openTableSession(
     `/branches/${branchId}/tables/${tableId}/sessions`,
     {
       method: 'POST',
+      token,
+    },
+  );
+}
+
+export async function getTableSession(
+  token: string,
+  branchId: string,
+  sessionId: string,
+): Promise<TableSessionDetailResponse> {
+  return apiRequest<TableSessionDetailResponse>(
+    `/branches/${branchId}/sessions/${sessionId}`,
+    {
+      method: 'GET',
       token,
     },
   );
