@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as menuApi from '@/api/menuApi';
+import * as ordersApi from '@/api/ordersApi';
 import type { MenuItemResponse } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 
@@ -25,7 +26,9 @@ export function WaiterOrderScreen({
 }: WaiterOrderScreenProps) {
   const { getAccessToken } = useAuth();
   const [items, setItems] = useState<MenuItemResponse[]>([]);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('all');
 
@@ -69,7 +72,9 @@ export function WaiterOrderScreen({
         });
       }
     }
-    return [...map.values()].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'));
+    return [...map.values()].sort(
+      (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'tr'),
+    );
   }, [items]);
 
   const visibleItems = useMemo(() => {
@@ -85,10 +90,61 @@ export function WaiterOrderScreen({
     );
   }, [items, activeCategoryId]);
 
+  const selectedLines = useMemo(
+    () =>
+      items
+        .filter((item) => (quantities[item.id] ?? 0) > 0)
+        .map((item) => ({
+          item,
+          quantity: quantities[item.id] ?? 0,
+        })),
+    [items, quantities],
+  );
+
+  const selectedCount = selectedLines.reduce((sum, line) => sum + line.quantity, 0);
+  const selectedTotal = selectedLines.reduce(
+    (sum, line) => sum + line.item.price * line.quantity,
+    0,
+  );
+
+  function setQuantity(itemId: string, next: number) {
+    setQuantities((prev) => {
+      if (next <= 0) {
+        const { [itemId]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [itemId]: next };
+    });
+  }
+
+  async function handleSubmit() {
+    if (selectedLines.length === 0 || saving) {
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const token = await getAccessToken();
+      await ordersApi.addOrderRound(token, branchId, sessionId, {
+        lines: selectedLines.map((line) => ({
+          menuItemId: line.item.id,
+          quantity: line.quantity,
+        })),
+      });
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sipariş gönderilemedi');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <section className="floor-order" aria-label={`${tableName} sipariş`}>
       <div className="floor-order-bar">
-        <button className="floor-text-btn" type="button" onClick={onClose}>
+        <button className="floor-text-btn" type="button" onClick={onClose} disabled={saving}>
           Geri
         </button>
         <div className="floor-order-title">
@@ -134,17 +190,59 @@ export function WaiterOrderScreen({
           <p className="floor-empty">Bu şubede menü ürünü yok.</p>
         ) : (
           <ul className="floor-order-list">
-            {visibleItems.map((item) => (
-              <li key={item.id} className="floor-order-item">
-                <div>
-                  <strong>{item.name}</strong>
-                  <span>{item.categoryName}</span>
-                </div>
-                <em>{formatLira(item.price)}</em>
-              </li>
-            ))}
+            {visibleItems.map((item) => {
+              const quantity = quantities[item.id] ?? 0;
+              return (
+                <li
+                  key={item.id}
+                  className={`floor-order-item${quantity > 0 ? ' is-selected' : ''}`}
+                >
+                  <div>
+                    <strong>{item.name}</strong>
+                    <span>{item.categoryName}</span>
+                  </div>
+                  <div className="floor-order-item-side">
+                    <em>{formatLira(item.price)}</em>
+                    <div className="floor-order-qty">
+                      <button
+                        type="button"
+                        aria-label={`${item.name} azalt`}
+                        disabled={quantity === 0 || saving}
+                        onClick={() => setQuantity(item.id, quantity - 1)}
+                      >
+                        −
+                      </button>
+                      <span aria-live="polite">{quantity}</span>
+                      <button
+                        type="button"
+                        aria-label={`${item.name} artır`}
+                        disabled={saving}
+                        onClick={() => setQuantity(item.id, quantity + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
+      </div>
+
+      <div className="floor-order-footer">
+        <div className="floor-order-summary">
+          <strong>{selectedCount} ürün</strong>
+          <span>{formatLira(selectedTotal)}</span>
+        </div>
+        <button
+          className="floor-order-submit"
+          type="button"
+          disabled={selectedCount === 0 || saving}
+          onClick={() => void handleSubmit()}
+        >
+          {saving ? 'Gönderiliyor...' : 'Siparişi gönder'}
+        </button>
       </div>
     </section>
   );

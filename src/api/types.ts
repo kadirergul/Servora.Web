@@ -87,6 +87,20 @@ export type MenuItemResponse = {
   price: number;
 };
 
+export type OrderLineInput = {
+  menuItemId: string;
+  quantity: number;
+  note?: string | null;
+};
+
+export type AddOrderRoundRequest = {
+  lines: OrderLineInput[];
+};
+
+export type AddOrderRoundResponse = {
+  id: string;
+};
+
 export type KitchenStatus = 'Pending' | 'Preparing' | 'Ready' | 'Served';
 
 export type KitchenQueueItemResponse = {
