@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ApiRequestError } from '@/api/client';
 import * as branchesApi from '@/api/branchesApi';
-import * as kitchenApi from '@/api/kitchenApi';
 import * as sessionsApi from '@/api/sessionsApi';
 import * as tablesApi from '@/api/tablesApi';
 import * as tenantsApi from '@/api/tenantsApi';
@@ -57,13 +55,10 @@ function tableDetail(table: FloorTable): string {
   return 'Masa açık';
 }
 
-function toFloorTables(
-  tables: TableResponse[],
-  readyTableIds: Set<string>,
-): FloorTable[] {
+function toFloorTables(tables: TableResponse[]): FloorTable[] {
   return tables.map((table) => {
     let status: FloorTableStatus = 'empty';
-    if (readyTableIds.has(table.id)) {
+    if (table.hasReadyOrder) {
       status = 'ready';
     } else if (table.isOccupied) {
       status = 'occupied';
@@ -211,29 +206,8 @@ export function WaiterFloorPage() {
 
     try {
       const token = await getAccessToken();
-      const [tableList, readyTableIds] = await Promise.all([
-        tablesApi.listTables(token, activeBranchId),
-        (async () => {
-          try {
-            const queue = await kitchenApi.listKitchenQueue(token, activeBranchId);
-            return new Set(
-              queue
-                .filter((item) => item.kitchenStatus === 'Ready')
-                .map((item) => item.tableId),
-            );
-          } catch (err) {
-            if (
-              err instanceof ApiRequestError &&
-              (err.status === 400 || err.status === 404)
-            ) {
-              return new Set<string>();
-            }
-            throw err;
-          }
-        })(),
-      ]);
-
-      const nextTables = toFloorTables(tableList, readyTableIds);
+      const tableList = await tablesApi.listTables(token, activeBranchId);
+      const nextTables = toFloorTables(tableList);
       setTables(nextTables);
       setSelectedId((current) => {
         if (current && nextTables.some((table) => table.id === current)) {
