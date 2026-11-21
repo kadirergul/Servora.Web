@@ -68,6 +68,25 @@ export type TableResponse = {
   openedAt: string | null;
 };
 
+export type OpenTableSessionResponse = {
+  id: string;
+};
+
+export type MenuCategoryResponse = {
+  id: string;
+  name: string;
+  sortOrder: number;
+};
+
+export type MenuItemResponse = {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  categorySortOrder: number;
+  name: string;
+  price: number;
+};
+
 export type KitchenStatus = 'Pending' | 'Preparing' | 'Ready' | 'Served';
 
 export type KitchenQueueItemResponse = {

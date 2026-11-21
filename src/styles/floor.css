@@ -575,3 +575,140 @@
     padding-inline: 6px;
   }
 }
+
+.floor-order {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #1b1e1c;
+}
+
+.floor-order-bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #2c322f;
+  background: #121512;
+}
+
+.floor-order-title h2,
+.floor-order-title p {
+  margin: 0;
+}
+
+.floor-order-title h2 {
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.floor-order-title p {
+  margin-top: 2px;
+  color: #b7bdb8;
+  font-size: 0.82rem;
+}
+
+.floor-order-session {
+  color: #b7f0cf;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.floor-order-cats {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 16px 0;
+  scrollbar-width: thin;
+}
+
+.floor-order-cat {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #2c322f;
+  border-radius: 999px;
+  background: #070807;
+  color: #d7ddd8;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.floor-order-cat.is-active {
+  border-color: #3ddc6e;
+  background: rgba(61, 220, 110, 0.16);
+  color: #b6f5c9;
+  font-weight: 700;
+}
+
+.floor-order-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+
+.floor-order-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.floor-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #2c322f;
+  border-radius: 16px;
+  background: #070807;
+}
+
+.floor-order-item div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.floor-order-item strong {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.floor-order-item span {
+  color: #9aa39c;
+  font-size: 0.8rem;
+}
+
+.floor-order-item em {
+  flex: 0 0 auto;
+  color: #3ddc6e;
+  font-style: normal;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 720px) {
+  .floor-order-bar,
+  .floor-order-cats,
+  .floor-order-scroll {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .floor-order-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .floor-order-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

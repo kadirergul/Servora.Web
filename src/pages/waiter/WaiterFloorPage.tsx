@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiRequestError } from '@/api/client';
 import * as branchesApi from '@/api/branchesApi';
 import * as kitchenApi from '@/api/kitchenApi';
+import * as sessionsApi from '@/api/sessionsApi';
 import * as tablesApi from '@/api/tablesApi';
 import * as tenantsApi from '@/api/tenantsApi';
 import type { BranchResponse, TableResponse, TenantResponse } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { FloorHeaderTools } from '@/layout/FloorHeaderTools';
+import { WaiterOrderScreen } from '@/pages/waiter/WaiterOrderScreen';
 
 type FloorTableStatus = 'empty' | 'occupied' | 'ready';
 
@@ -97,9 +99,15 @@ export function WaiterFloorPage() {
 
   const [tables, setTables] = useState<FloorTable[]>([]);
   const [loading, setLoading] = useState(false);
+  const [openingSession, setOpeningSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [actionsOpen, setActionsOpen] = useState(true);
+  const [orderSession, setOrderSession] = useState<{
+    tableId: string;
+    tableName: string;
+    sessionId: string;
+  } | null>(null);
 
   const activeBranchId = isBranchBound ? (branchId ?? '') : (branchId ?? selectedBranchId);
   const selected =
@@ -244,6 +252,65 @@ export function WaiterFloorPage() {
   useEffect(() => {
     void loadTables();
   }, [loadTables]);
+
+  async function handleTakeOrder() {
+    if (!selected || !activeBranchId || openingSession) {
+      return;
+    }
+
+    setOpeningSession(true);
+    setError(null);
+
+    try {
+      const token = await getAccessToken();
+      let sessionId = selected.sessionId;
+
+      if (selected.status === 'empty' || !sessionId) {
+        const opened = await sessionsApi.openTableSession(
+          token,
+          activeBranchId,
+          selected.id,
+        );
+        sessionId = opened.id;
+        await loadTables();
+      }
+
+      setOrderSession({
+        tableId: selected.id,
+        tableName: selected.name,
+        sessionId,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sipariş ekranı açılamadı');
+    } finally {
+      setOpeningSession(false);
+    }
+  }
+
+  if (orderSession && activeBranchId) {
+    return (
+      <>
+        <header className="floor-header">
+          <div className="floor-brand-block">
+            <p className="floor-logo">SERVORA</p>
+            <p className="floor-kicker">Garson Yönetim Paneli</p>
+          </div>
+          <div className="floor-header-side">
+            <FloorHeaderTools />
+          </div>
+        </header>
+        <WaiterOrderScreen
+          branchId={activeBranchId}
+          tableName={orderSession.tableName}
+          sessionId={orderSession.sessionId}
+          onClose={() => {
+            setOrderSession(null);
+            void loadTables();
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -425,8 +492,13 @@ export function WaiterFloorPage() {
 
           {actionsOpen ? (
             <div className="floor-actions-body">
-              <button className="floor-order-btn" type="button" disabled={!selected}>
-                + Sipariş al
+              <button
+                className="floor-order-btn"
+                type="button"
+                disabled={!selected || openingSession}
+                onClick={() => void handleTakeOrder()}
+              >
+                {openingSession ? 'Açılıyor...' : '+ Sipariş al'}
               </button>
               <div className="floor-action-row">
                 <button className="floor-ghost-btn" type="button" disabled={!selected}>
