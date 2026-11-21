@@ -6,7 +6,6 @@ import * as tenantsApi from '@/api/tenantsApi';
 import type { BranchResponse, TableResponse, TenantResponse } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { FloorHeaderTools } from '@/layout/FloorHeaderTools';
-import { WaiterBillScreen } from '@/pages/waiter/WaiterBillScreen';
 import { WaiterOrderScreen } from '@/pages/waiter/WaiterOrderScreen';
 import { WaiterSessionDetailScreen } from '@/pages/waiter/WaiterSessionDetailScreen';
 
@@ -106,11 +105,6 @@ export function WaiterFloorPage() {
     sessionId: string;
   } | null>(null);
   const [detailSession, setDetailSession] = useState<{
-    tableId: string;
-    tableName: string;
-    sessionId: string;
-  } | null>(null);
-  const [billSession, setBillSession] = useState<{
     tableId: string;
     tableName: string;
     sessionId: string;
@@ -323,35 +317,6 @@ export function WaiterFloorPage() {
     );
   }
 
-  if (billSession && activeBranchId) {
-    return (
-      <>
-        <header className="floor-header">
-          <div className="floor-brand-block">
-            <p className="floor-logo">SERVORA</p>
-            <p className="floor-kicker">Garson Yönetim Paneli</p>
-          </div>
-          <div className="floor-header-side">
-            <FloorHeaderTools />
-          </div>
-        </header>
-        <WaiterBillScreen
-          branchId={activeBranchId}
-          tableName={billSession.tableName}
-          sessionId={billSession.sessionId}
-          onClose={() => {
-            setBillSession(null);
-            void loadTables();
-          }}
-          onPaid={() => {
-            setBillSession(null);
-            void loadTables();
-          }}
-        />
-      </>
-    );
-  }
-
   return (
     <>
       <header className="floor-header">
@@ -541,23 +506,6 @@ export function WaiterFloorPage() {
                 {openingSession ? 'Açılıyor...' : '+ Sipariş al'}
               </button>
               <div className="floor-action-row">
-                <button
-                  className="floor-ghost-btn"
-                  type="button"
-                  disabled={!selected?.sessionId}
-                  onClick={() => {
-                    if (!selected?.sessionId) {
-                      return;
-                    }
-                    setBillSession({
-                      tableId: selected.id,
-                      tableName: selected.name,
-                      sessionId: selected.sessionId,
-                    });
-                  }}
-                >
-                  Hesap
-                </button>
                 <button
                   className="floor-ghost-btn"
                   type="button"

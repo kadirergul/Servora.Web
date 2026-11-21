@@ -8,6 +8,7 @@ import {
 } from '@/auth/roles';
 import { AuthenticatedLayout } from '@/layout/AuthenticatedLayout';
 import { FloorLayout } from '@/layout/FloorLayout';
+import { CashierFloorPage } from '@/pages/cashier/CashierFloorPage';
 import { FloorSoonPage } from '@/pages/FloorSoonPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
@@ -45,10 +46,7 @@ export function AppRoutes() {
           path="/kasa"
           element={
             <RequireRole roles={CASHIER_FLOOR_ROLES}>
-              <FloorSoonPage
-                title="Kasa"
-                description="Tahsilat bu adreste açılacak."
-              />
+              <CashierFloorPage />
             </RequireRole>
           }
         />
