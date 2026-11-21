@@ -64,6 +64,8 @@ export type TableResponse = {
   id: string;
   name: string;
   isOccupied: boolean;
+  hasPendingOrder: boolean;
+  hasPreparingOrder: boolean;
   hasReadyOrder: boolean;
   sessionId: string | null;
   openedAt: string | null;

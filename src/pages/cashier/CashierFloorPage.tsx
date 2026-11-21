@@ -8,7 +8,7 @@ import { FloorHeaderTools } from '@/layout/FloorHeaderTools';
 import { WaiterBillScreen } from '@/pages/waiter/WaiterBillScreen';
 import { WaiterSessionDetailScreen } from '@/pages/waiter/WaiterSessionDetailScreen';
 
-type FloorTableStatus = 'empty' | 'occupied' | 'ready';
+type FloorTableStatus = 'empty' | 'occupied' | 'preparing' | 'ready';
 
 type FloorTable = {
   id: string;
@@ -20,6 +20,7 @@ type FloorTable = {
 const STATUS_LABEL: Record<FloorTableStatus, string> = {
   empty: 'Boş',
   occupied: 'Açık',
+  preparing: 'Hazırlanıyor',
   ready: 'Hazır',
 };
 
@@ -52,13 +53,19 @@ function tableDetail(table: FloorTable): string {
     return 'Sipariş hazır · tahsilat açık';
   }
 
+  if (table.status === 'preparing') {
+    return 'Mutfakta hazırlanıyor';
+  }
+
   return 'Hesap açık';
 }
 
 function toFloorTables(tables: TableResponse[]): FloorTable[] {
   return tables.map((table) => {
     let status: FloorTableStatus = 'empty';
-    if (table.hasReadyOrder) {
+    if (table.hasPreparingOrder || table.hasPendingOrder) {
+      status = 'preparing';
+    } else if (table.hasReadyOrder) {
       status = 'ready';
     } else if (table.isOccupied) {
       status = 'occupied';
@@ -408,6 +415,10 @@ export function CashierFloorPage() {
                     <li>
                       <span className="floor-dot is-occupied" aria-hidden="true" />
                       Açık
+                    </li>
+                    <li>
+                      <span className="floor-dot is-preparing" aria-hidden="true" />
+                      Hazırlanıyor
                     </li>
                     <li>
                       <span className="floor-dot is-ready" aria-hidden="true" />

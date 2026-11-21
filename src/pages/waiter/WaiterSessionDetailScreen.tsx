@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import * as orderLinesApi from '@/api/orderLinesApi';
 import * as sessionsApi from '@/api/sessionsApi';
 import type { KitchenStatus, TableSessionDetailResponse } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
@@ -24,6 +25,10 @@ function formatLira(value: number): string {
   }).format(value)} ₺`;
 }
 
+function canCancelLine(status: KitchenStatus): boolean {
+  return status === 'Pending' || status === 'Preparing';
+}
+
 export function WaiterSessionDetailScreen({
   branchId,
   tableName,
@@ -33,42 +38,57 @@ export function WaiterSessionDetailScreen({
   const { getAccessToken } = useAuth();
   const [detail, setDetail] = useState<TableSessionDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadDetail = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-    void (async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const token = await getAccessToken();
-        const next = await sessionsApi.getTableSession(token, branchId, sessionId);
-        if (!cancelled) {
-          setDetail(next);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setDetail(null);
-          setError(err instanceof Error ? err.message : 'Detaylar yüklenemedi');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    try {
+      const token = await getAccessToken();
+      const next = await sessionsApi.getTableSession(token, branchId, sessionId);
+      setDetail(next);
+    } catch (err) {
+      setDetail(null);
+      setError(err instanceof Error ? err.message : 'Detaylar yüklenemedi');
+    } finally {
+      setLoading(false);
+    }
   }, [branchId, sessionId, getAccessToken]);
+
+  useEffect(() => {
+    void loadDetail();
+  }, [loadDetail]);
+
+  async function handleCancel(lineId: string) {
+    if (cancellingId) {
+      return;
+    }
+
+    setCancellingId(lineId);
+    setError(null);
+
+    try {
+      const token = await getAccessToken();
+      await orderLinesApi.cancelOrderLine(token, branchId, lineId);
+      await loadDetail();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ürün iptal edilemedi');
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   return (
     <section className="floor-order" aria-label={`${tableName} detay`}>
       <div className="floor-order-bar">
-        <button className="floor-text-btn" type="button" onClick={onClose}>
+        <button
+          className="floor-text-btn"
+          type="button"
+          onClick={onClose}
+          disabled={cancellingId !== null}
+        >
           Geri
         </button>
         <div className="floor-order-title">
@@ -82,7 +102,7 @@ export function WaiterSessionDetailScreen({
 
       <div className="floor-order-scroll">
         {error ? <p className="floor-error">{error}</p> : null}
-        {loading ? (
+        {loading && !detail ? (
           <p className="floor-empty">Detaylar yükleniyor...</p>
         ) : !detail ? (
           <p className="floor-empty">Oturum bulunamadı.</p>
@@ -103,7 +123,19 @@ export function WaiterSessionDetailScreen({
                     {KITCHEN_STATUS_LABEL[line.kitchenStatus]}
                   </span>
                 </div>
-                <em>{formatLira(line.lineTotal)}</em>
+                <div className="floor-detail-side">
+                  <em>{formatLira(line.lineTotal)}</em>
+                  {detail.status === 'Open' && canCancelLine(line.kitchenStatus) ? (
+                    <button
+                      className="floor-detail-cancel"
+                      type="button"
+                      disabled={cancellingId !== null}
+                      onClick={() => void handleCancel(line.id)}
+                    >
+                      {cancellingId === line.id ? '...' : 'İptal'}
+                    </button>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>

@@ -27,6 +27,7 @@ export function WaiterOrderScreen({
   const { getAccessToken } = useAuth();
   const [items, setItems] = useState<MenuItemResponse[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,8 +98,9 @@ export function WaiterOrderScreen({
         .map((item) => ({
           item,
           quantity: quantities[item.id] ?? 0,
+          note: notes[item.id]?.trim() ?? '',
         })),
-    [items, quantities],
+    [items, quantities, notes],
   );
 
   const selectedCount = selectedLines.reduce((sum, line) => sum + line.quantity, 0);
@@ -114,6 +116,23 @@ export function WaiterOrderScreen({
         return rest;
       }
       return { ...prev, [itemId]: next };
+    });
+
+    if (next <= 0) {
+      setNotes((prev) => {
+        const { [itemId]: _, ...rest } = prev;
+        return rest;
+      });
+    }
+  }
+
+  function setNote(itemId: string, note: string) {
+    setNotes((prev) => {
+      if (!note.trim()) {
+        const { [itemId]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [itemId]: note };
     });
   }
 
@@ -131,6 +150,7 @@ export function WaiterOrderScreen({
         lines: selectedLines.map((line) => ({
           menuItemId: line.item.id,
           quantity: line.quantity,
+          note: line.note || null,
         })),
       });
       onClose();
@@ -197,31 +217,47 @@ export function WaiterOrderScreen({
                   key={item.id}
                   className={`floor-order-item${quantity > 0 ? ' is-selected' : ''}`}
                 >
-                  <div>
-                    <strong>{item.name}</strong>
-                    <span>{item.categoryName}</span>
-                  </div>
-                  <div className="floor-order-item-side">
-                    <em>{formatLira(item.price)}</em>
-                    <div className="floor-order-qty">
-                      <button
-                        type="button"
-                        aria-label={`${item.name} azalt`}
-                        disabled={quantity === 0 || saving}
-                        onClick={() => setQuantity(item.id, quantity - 1)}
-                      >
-                        −
-                      </button>
-                      <span aria-live="polite">{quantity}</span>
-                      <button
-                        type="button"
-                        aria-label={`${item.name} artır`}
-                        disabled={saving}
-                        onClick={() => setQuantity(item.id, quantity + 1)}
-                      >
-                        +
-                      </button>
+                  <div className="floor-order-item-body">
+                    <div className="floor-order-item-row">
+                      <div>
+                        <strong>{item.name}</strong>
+                        <span>{item.categoryName}</span>
+                      </div>
+                      <div className="floor-order-item-side">
+                        <em>{formatLira(item.price)}</em>
+                        <div className="floor-order-qty">
+                          <button
+                            type="button"
+                            aria-label={`${item.name} azalt`}
+                            disabled={quantity === 0 || saving}
+                            onClick={() => setQuantity(item.id, quantity - 1)}
+                          >
+                            −
+                          </button>
+                          <span aria-live="polite">{quantity}</span>
+                          <button
+                            type="button"
+                            aria-label={`${item.name} artır`}
+                            disabled={saving}
+                            onClick={() => setQuantity(item.id, quantity + 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
                     </div>
+                    {quantity > 0 ? (
+                      <label className="floor-order-note">
+                        <span>Not</span>
+                        <input
+                          type="text"
+                          value={notes[item.id] ?? ''}
+                          placeholder="Örn. az pişmiş, sossuz"
+                          disabled={saving}
+                          onChange={(event) => setNote(item.id, event.target.value)}
+                        />
+                      </label>
+                    ) : null}
                   </div>
                 </li>
               );

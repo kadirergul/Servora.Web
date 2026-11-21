@@ -15,11 +15,6 @@ const FLOOR_TENANT_KEY = 'servora.floorTenantId';
 const FLOOR_BRANCH_KEY = 'servora.floorBranchId';
 const BRANCH_BOUND_ROLES = new Set(['Manager', 'Waiter', 'Kitchen', 'Cashier']);
 
-const STATUS_LABEL: Record<'Pending' | 'Preparing', string> = {
-  Pending: 'Bekliyor',
-  Preparing: 'Hazırlanıyor',
-};
-
 function greetingForHour(hour: number): string {
   if (hour < 6) {
     return 'İyi geceler';
@@ -48,24 +43,8 @@ function formatTime(value: string): string {
   });
 }
 
-function nextStatus(status: KitchenStatus): KitchenStatus | null {
-  if (status === 'Pending') {
-    return 'Preparing';
-  }
-  if (status === 'Preparing') {
-    return 'Ready';
-  }
-  return null;
-}
-
-function nextActionLabel(status: KitchenStatus): string | null {
-  if (status === 'Pending') {
-    return 'Başla';
-  }
-  if (status === 'Preparing') {
-    return 'Hazır';
-  }
-  return null;
+function isQueueActive(status: KitchenStatus): boolean {
+  return status === 'Pending' || status === 'Preparing';
 }
 
 type KitchenTableGroup = {
@@ -101,19 +80,6 @@ function groupByTable(queue: KitchenQueueItemResponse[]): KitchenTableGroup[] {
   );
 }
 
-function groupStatusLabel(items: KitchenQueueItemResponse[]): string {
-  if (items.some((item) => item.kitchenStatus === 'Preparing')) {
-    return STATUS_LABEL.Preparing;
-  }
-  return STATUS_LABEL.Pending;
-}
-
-function groupStatusClass(items: KitchenQueueItemResponse[]): string {
-  return items.some((item) => item.kitchenStatus === 'Preparing')
-    ? 'preparing'
-    : 'pending';
-}
-
 export function KitchenFloorPage() {
   const { getAccessToken, role, tenantId, branchId } = useAuth();
   const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
@@ -138,8 +104,6 @@ export function KitchenFloorPage() {
   const [error, setError] = useState<string | null>(null);
 
   const activeBranchId = isBranchBound ? (branchId ?? '') : (branchId ?? selectedBranchId);
-  const pendingCount = items.filter((item) => item.kitchenStatus === 'Pending').length;
-  const preparingCount = items.filter((item) => item.kitchenStatus === 'Preparing').length;
   const groups = useMemo(() => groupByTable(items), [items]);
 
   useEffect(() => {
@@ -264,9 +228,8 @@ export function KitchenFloorPage() {
     };
   }, [activeBranchId, loadQueue]);
 
-  async function handleAdvance(item: KitchenQueueItemResponse) {
-    const status = nextStatus(item.kitchenStatus);
-    if (!status || !activeBranchId || updatingId || updatingTableId) {
+  async function handleMarkReady(item: KitchenQueueItemResponse) {
+    if (!isQueueActive(item.kitchenStatus) || !activeBranchId || updatingId || updatingTableId) {
       return;
     }
 
@@ -279,7 +242,7 @@ export function KitchenFloorPage() {
         token,
         activeBranchId,
         item.orderLineId,
-        status,
+        'Ready',
       );
       await loadQueue();
     } catch (err) {
@@ -289,16 +252,12 @@ export function KitchenFloorPage() {
     }
   }
 
-  async function handleAdvanceGroup(
-    group: KitchenTableGroup,
-    fromStatus: 'Pending' | 'Preparing',
-  ) {
-    const status = nextStatus(fromStatus);
-    if (!status || !activeBranchId || updatingId || updatingTableId) {
+  async function handleMarkGroupReady(group: KitchenTableGroup) {
+    if (!activeBranchId || updatingId || updatingTableId) {
       return;
     }
 
-    const targets = group.items.filter((item) => item.kitchenStatus === fromStatus);
+    const targets = group.items.filter((item) => isQueueActive(item.kitchenStatus));
     if (targets.length === 0) {
       return;
     }
@@ -313,7 +272,7 @@ export function KitchenFloorPage() {
           token,
           activeBranchId,
           item.orderLineId,
-          status,
+          'Ready',
         );
       }
       await loadQueue();
@@ -423,16 +382,12 @@ export function KitchenFloorPage() {
             <>
               <section className="floor-stats" aria-label="Mutfak özeti">
                 <article className="floor-stat">
-                  <span>Bekleyen</span>
-                  <strong>{formatCount(pendingCount)}</strong>
-                </article>
-                <article className="floor-stat">
                   <span>Hazırlanıyor</span>
-                  <strong>{formatCount(preparingCount)}</strong>
+                  <strong>{formatCount(items.length)}</strong>
                 </article>
                 <article className="floor-stat">
-                  <span>Toplam</span>
-                  <strong>{formatCount(items.length)}</strong>
+                  <span>Masa</span>
+                  <strong>{formatCount(groups.length)}</strong>
                 </article>
               </section>
 
@@ -448,108 +403,69 @@ export function KitchenFloorPage() {
                 ) : (
                   <ul className="floor-kitchen-list">
                     {groups.map((group) => {
-                      const pendingItems = group.items.filter(
-                        (item) => item.kitchenStatus === 'Pending',
-                      );
-                      const preparingItems = group.items.filter(
-                        (item) => item.kitchenStatus === 'Preparing',
-                      );
                       const busy =
                         updatingTableId === group.tableId || updatingId !== null;
 
                       return (
                         <li
                           key={group.tableId}
-                          className={`floor-kitchen-group is-${groupStatusClass(group.items)}`}
+                          className="floor-kitchen-group is-preparing"
                         >
                           <div className="floor-kitchen-group-head">
                             <div className="floor-kitchen-meta">
                               <strong>{group.tableName}</strong>
-                              <span
-                                className={`floor-detail-status is-${groupStatusClass(group.items)}`}
-                              >
-                                {groupStatusLabel(group.items)}
+                              <span className="floor-detail-status is-preparing">
+                                Hazırlanıyor
                               </span>
                               <span className="floor-kitchen-time">
                                 {formatTime(group.orderedAt)} · {group.items.length} kalem
                               </span>
                             </div>
                             <div className="floor-kitchen-group-actions">
-                              {pendingItems.length > 0 ? (
-                                <button
-                                  className="floor-kitchen-action"
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    void handleAdvanceGroup(group, 'Pending')
-                                  }
-                                >
-                                  {updatingTableId === group.tableId
-                                    ? '...'
-                                    : pendingItems.length === group.items.length
-                                      ? 'Hepsini başlat'
-                                      : `Bekleyenleri başlat (${pendingItems.length})`}
-                                </button>
-                              ) : null}
-                              {preparingItems.length > 0 ? (
-                                <button
-                                  className="floor-kitchen-action"
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    void handleAdvanceGroup(group, 'Preparing')
-                                  }
-                                >
-                                  {updatingTableId === group.tableId
-                                    ? '...'
-                                    : preparingItems.length === group.items.length
-                                      ? 'Hepsini hazır'
-                                      : `Hazırlayanları bitir (${preparingItems.length})`}
-                                </button>
-                              ) : null}
+                              <button
+                                className="floor-kitchen-action"
+                                type="button"
+                                disabled={busy}
+                                onClick={() => void handleMarkGroupReady(group)}
+                              >
+                                {updatingTableId === group.tableId
+                                  ? '...'
+                                  : group.items.length === 1
+                                    ? 'Hazır'
+                                    : 'Hepsini hazır'}
+                              </button>
                             </div>
                           </div>
 
                           <ul className="floor-kitchen-lines">
-                            {group.items.map((item) => {
-                              const action = nextActionLabel(item.kitchenStatus);
-                              const statusKey =
-                                item.kitchenStatus === 'Preparing'
-                                  ? 'Preparing'
-                                  : 'Pending';
-                              return (
-                                <li key={item.orderLineId} className="floor-kitchen-line">
-                                  <div className="floor-kitchen-main">
-                                    <div className="floor-kitchen-meta">
-                                      <span
-                                        className={`floor-detail-status is-${item.kitchenStatus.toLowerCase()}`}
-                                      >
-                                        {STATUS_LABEL[statusKey]}
-                                      </span>
-                                      <span className="floor-kitchen-time">
-                                        {formatTime(item.orderedAt)}
-                                      </span>
-                                    </div>
-                                    <p className="floor-kitchen-name">
-                                      {item.quantity}× {item.name}
-                                    </p>
-                                    {item.note ? (
-                                      <p className="floor-kitchen-note">{item.note}</p>
-                                    ) : null}
+                            {group.items.map((item) => (
+                              <li key={item.orderLineId} className="floor-kitchen-line">
+                                <div className="floor-kitchen-main">
+                                  <div className="floor-kitchen-meta">
+                                    <span className="floor-detail-status is-preparing">
+                                      Hazırlanıyor
+                                    </span>
+                                    <span className="floor-kitchen-time">
+                                      {formatTime(item.orderedAt)}
+                                    </span>
                                   </div>
-                                  {action ? (
-                                    <button
-                                      className="floor-kitchen-action is-ghost"
-                                      type="button"
-                                      disabled={busy}
-                                      onClick={() => void handleAdvance(item)}
-                                    >
-                                      {updatingId === item.orderLineId ? '...' : action}
-                                    </button>
+                                  <p className="floor-kitchen-name">
+                                    {item.quantity}× {item.name}
+                                  </p>
+                                  {item.note ? (
+                                    <p className="floor-kitchen-note">{item.note}</p>
                                   ) : null}
-                                </li>
-                              );
-                            })}
+                                </div>
+                                <button
+                                  className="floor-kitchen-action is-ghost"
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => void handleMarkReady(item)}
+                                >
+                                  {updatingId === item.orderLineId ? '...' : 'Hazır'}
+                                </button>
+                              </li>
+                            ))}
                           </ul>
                         </li>
                       );

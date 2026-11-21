@@ -9,7 +9,7 @@ import { FloorHeaderTools } from '@/layout/FloorHeaderTools';
 import { WaiterOrderScreen } from '@/pages/waiter/WaiterOrderScreen';
 import { WaiterSessionDetailScreen } from '@/pages/waiter/WaiterSessionDetailScreen';
 
-type FloorTableStatus = 'empty' | 'occupied' | 'ready';
+type FloorTableStatus = 'empty' | 'occupied' | 'preparing' | 'ready';
 
 type FloorTable = {
   id: string;
@@ -21,6 +21,7 @@ type FloorTable = {
 const STATUS_LABEL: Record<FloorTableStatus, string> = {
   empty: 'Boş',
   occupied: 'Dolu',
+  preparing: 'Hazırlanıyor',
   ready: 'Hazır',
 };
 
@@ -53,13 +54,20 @@ function tableDetail(table: FloorTable): string {
     return 'Sipariş hazır';
   }
 
+  if (table.status === 'preparing') {
+    return 'Mutfakta hazırlanıyor';
+  }
+
   return 'Masa açık';
 }
 
 function toFloorTables(tables: TableResponse[]): FloorTable[] {
   return tables.map((table) => {
     let status: FloorTableStatus = 'empty';
-    if (table.hasReadyOrder) {
+    // New kitchen rounds start as Preparing; leftover Pending also counts as Hazırlanıyor.
+    if (table.hasPreparingOrder || table.hasPendingOrder) {
+      status = 'preparing';
+    } else if (table.hasReadyOrder) {
       status = 'ready';
     } else if (table.isOccupied) {
       status = 'occupied';
@@ -114,7 +122,7 @@ export function WaiterFloorPage() {
   const selected =
     tables.find((table) => table.id === selectedId) ?? tables[0] ?? null;
   const emptyCount = tables.filter((table) => table.status === 'empty').length;
-  const occupiedCount = tables.filter((table) => table.status !== 'empty').length;
+  const preparingCount = tables.filter((table) => table.status === 'preparing').length;
   const readyCount = tables.filter((table) => table.status === 'ready').length;
 
   useEffect(() => {
@@ -200,14 +208,16 @@ export function WaiterFloorPage() {
     };
   }, [needsBranchPicker, role, tenantId, selectedTenantId, getAccessToken]);
 
-  const loadTables = useCallback(async () => {
+  const loadTables = useCallback(async (opts?: { silent?: boolean }) => {
     if (!activeBranchId) {
       setTables([]);
       setSelectedId(null);
       return;
     }
 
-    setLoading(true);
+    if (!opts?.silent) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -225,13 +235,29 @@ export function WaiterFloorPage() {
       setTables([]);
       setError(err instanceof Error ? err.message : 'Masalar yüklenemedi');
     } finally {
-      setLoading(false);
+      if (!opts?.silent) {
+        setLoading(false);
+      }
     }
   }, [activeBranchId, getAccessToken]);
 
   useEffect(() => {
     void loadTables();
   }, [loadTables]);
+
+  useEffect(() => {
+    if (!activeBranchId) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      void loadTables({ silent: true });
+    }, 8_000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [activeBranchId, loadTables]);
 
   async function handleTakeOrder() {
     if (!selected || !activeBranchId || openingSession) {
@@ -418,8 +444,8 @@ export function WaiterFloorPage() {
                   <strong>{formatCount(emptyCount)}</strong>
                 </article>
                 <article className="floor-stat">
-                  <span>Dolu masa</span>
-                  <strong>{formatCount(occupiedCount)}</strong>
+                  <span>Hazırlanıyor</span>
+                  <strong>{formatCount(preparingCount)}</strong>
                 </article>
                 <article className="floor-stat">
                   <span>Hazır sipariş</span>
@@ -438,6 +464,10 @@ export function WaiterFloorPage() {
                     <li>
                       <span className="floor-dot is-occupied" aria-hidden="true" />
                       Dolu
+                    </li>
+                    <li>
+                      <span className="floor-dot is-preparing" aria-hidden="true" />
+                      Hazırlanıyor
                     </li>
                     <li>
                       <span className="floor-dot is-ready" aria-hidden="true" />
