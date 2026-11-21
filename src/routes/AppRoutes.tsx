@@ -9,7 +9,7 @@ import {
 import { AuthenticatedLayout } from '@/layout/AuthenticatedLayout';
 import { FloorLayout } from '@/layout/FloorLayout';
 import { CashierFloorPage } from '@/pages/cashier/CashierFloorPage';
-import { FloorSoonPage } from '@/pages/FloorSoonPage';
+import { KitchenFloorPage } from '@/pages/kitchen/KitchenFloorPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { UsersPage } from '@/pages/UsersPage';
@@ -35,10 +35,7 @@ export function AppRoutes() {
           path="/mutfak"
           element={
             <RequireRole roles={KITCHEN_FLOOR_ROLES}>
-              <FloorSoonPage
-                title="Mutfak"
-                description="Mutfak kuyruğu bu adreste açılacak."
-              />
+              <KitchenFloorPage />
             </RequireRole>
           }
         />

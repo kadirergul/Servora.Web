@@ -154,6 +154,14 @@ export type KitchenQueueItemResponse = {
   orderedAt: string;
 };
 
+export type UpdateKitchenStatusRequest = {
+  status: KitchenStatus;
+};
+
+export type UpdateKitchenStatusResponse = {
+  id: string;
+};
+
 export type ApiError = {
   title?: string;
   detail?: string;
